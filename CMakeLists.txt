@@ -1,8 +1,12 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.14)
 project(Microkernel LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_subdirectory(src)
+# Enable position-independent code for plugins
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+add_subdirectory(kernel)
+add_subdirectory(plugins)
