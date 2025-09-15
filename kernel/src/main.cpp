@@ -1,14 +1,14 @@
-#include <kernel/PluginInterface.hpp>
 #include <iostream>
 #include <dlfcn.h>
 #include <memory>
 #include <vector>
 #include <functional>
+#include <kernel/PluginInterface.hpp>
+#include <kernel/ConfigManager.hpp>
 
 class PluginManager {
 public:
     ~PluginManager() {
-        // Clean up all plugins
         for (auto& pluginInfo : plugins) {
             if (pluginInfo.destroy && pluginInfo.plugin) {
                 pluginInfo.destroy(pluginInfo.plugin);
@@ -20,13 +20,12 @@ public:
     }
 
     void loadPlugin(const std::string& path) {
-        void* handle = dlopen(path.c_str(), RTLD_LAZY);
+        void* handle = dlopen(path.c_str(), RTLD_NOW);
         if (!handle) {
             std::cerr << "Cannot load plugin: " << dlerror() << std::endl;
             return;
         }
 
-        // Clear any existing error
         dlerror();
 
         auto create = reinterpret_cast<PluginCreateFunc>(dlsym(handle, "createPlugin"));
@@ -45,7 +44,7 @@ public:
             return;
         }
 
-        // Create the plugin
+        // create the plugin
         IPlugin* plugin = create();
         if (!plugin) {
             std::cerr << "Failed to create plugin instance" << std::endl;
@@ -75,10 +74,38 @@ private:
 
 int main() {
     PluginManager manager;
+    ConfigManager config;
+
+    try { 
+        std::string config_path = std::getenv("MICROKERNEL_CONFIG_PATH") ? std::getenv("MICROKERNEL_CONFIG_PATH") : "";
+    } catch(...) {
+        std::cout << "Failed to get config path variable" << std::endl;
+        return 0;
+    }
+
+    if (!config.loadConfig(std::getenv("MICROKERNEL_CONFIG_PATH"))) {
+        std::cerr << "Failed to load configuration" << std::endl;
+        return 1;
+    }
+
+    nlohmann::json json = config.getJson();
     
-    // Load plugins
-    manager.loadPlugin("/Users/sharbel/code/microkernel/build/plugins/plugin1/libplugin1.dylib");
-    manager.loadPlugin("/Users/sharbel/code/microkernel/build/plugins/plugin2/libplugin2.dylib");
+    config.watchForChanges("logging.level", [](const auto& value) {
+        std::cout << "logging changed to: " << value << std::endl;
+    });
+
+    bool autoload = json["plugins"]["autoload"];
+    std::vector<std::filesystem::path> plugin_files;
+
+    if (autoload) {
+        std::string plugin_dir = json["plugins"]["directory"];
+        plugin_files = config.getPluginFilesFromDirectory(plugin_dir);
+    }
+
+    for (std::filesystem::path file : plugin_files) {
+
+        manager.loadPlugin(file);
+    }
     
     manager.runAll();
     return 0;

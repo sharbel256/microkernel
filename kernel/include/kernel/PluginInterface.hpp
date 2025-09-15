@@ -4,7 +4,6 @@
 #include <memory>
 #include <functional>
 
-// Plugin interface
 class IPlugin {
 public:
     virtual ~IPlugin() = default;
@@ -12,11 +11,9 @@ public:
     virtual void execute() = 0;
 };
 
-// Plugin function signatures
 using PluginCreateFunc = IPlugin*(*)();
 using PluginDestroyFunc = void(*)(IPlugin*);
 
-// Plugin API macros (to be used in plugins)
 #define EXPORT_PLUGIN(PluginClass) \
     extern "C" { \
         IPlugin* createPlugin() { \
