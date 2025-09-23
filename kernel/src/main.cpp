@@ -75,15 +75,16 @@ private:
 int main() {
     PluginManager manager;
     ConfigManager config;
+    std::string config_path = "";
 
     try { 
-        std::string config_path = std::getenv("MICROKERNEL_CONFIG_PATH") ? std::getenv("MICROKERNEL_CONFIG_PATH") : "";
+        config_path = std::getenv("MICROKERNEL_CONFIG_PATH") ? std::getenv("MICROKERNEL_CONFIG_PATH") : "";
     } catch(...) {
         std::cout << "Failed to get config path variable" << std::endl;
         return 0;
     }
 
-    if (!config.loadConfig(std::getenv("MICROKERNEL_CONFIG_PATH"))) {
+    if (!config.loadConfig(config_path)) {
         std::cerr << "Failed to load configuration" << std::endl;
         return 1;
     }
