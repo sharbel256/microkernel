@@ -5,6 +5,7 @@
 #include <kernel/ConfigManager.hpp>
 #include <kernel/PluginInterface.hpp>
 #include <memory>
+#include <thread>
 #include <vector>
 
 class PluginManager {
@@ -93,7 +94,7 @@ int main() {
 
   nlohmann::json json = config.getJson();
 
-  config.watchForChanges("logging.level", [](const auto& value) {
+  config.watchForChanges("algorithms", [](const auto& value) {
     std::cout << "logging changed to: " << value << std::endl;
   });
 

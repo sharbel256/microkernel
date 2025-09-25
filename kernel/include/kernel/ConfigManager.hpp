@@ -6,6 +6,7 @@
 #include <iostream>
 #include <nlohmann/json.hpp>
 #include <string>
+#include <thread>
 #include <unordered_map>
 
 class ConfigManager {
@@ -47,4 +48,5 @@ class ConfigManager {
   std::unordered_map<std::string, std::vector<ConfigChangedCallback>> subscribers_;
   std::filesystem::file_time_type lastModified_;
   bool watching_ = false;
+  std::thread fileWatcher_;
 };

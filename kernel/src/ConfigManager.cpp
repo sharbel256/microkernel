@@ -5,10 +5,16 @@
 #include <thread>
 
 ConfigManager::ConfigManager() {
-  // set up file watching thread
+  fileWatcher_ = std::thread([this] {
+    checkForUpdates();
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+  });
 }
 
-ConfigManager::~ConfigManager() { watching_ = false; }
+ConfigManager::~ConfigManager() {
+  watching_ = false;
+  fileWatcher_.join();
+}
 
 bool ConfigManager::loadConfig(const std::string& configPath) {
   configPath_ = configPath;
