@@ -1,10 +1,13 @@
 find_package(nlohmann_json 3.2.0 REQUIRED)
 
 add_library(kernel SHARED
+    include/kernel/config_manager.hpp
+    include/kernel/plugin_interface.hpp
+    include/kernel/ring_buffer.hpp
+    include/kernel/model.hpp
+    include/kernel/kernel.hpp
+    src/config_manager.cpp
     src/main.cpp
-    src/ConfigManager.cpp
-    include/kernel/ConfigManager.hpp
-    include/kernel/PluginInterface.hpp
 )
 
 target_link_libraries(kernel PUBLIC nlohmann_json::nlohmann_json)

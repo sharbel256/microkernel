@@ -2,8 +2,8 @@
 
 #include <functional>
 #include <iostream>
-#include <kernel/ConfigManager.hpp>
-#include <kernel/PluginInterface.hpp>
+#include <kernel/config_manager.hpp>
+#include <kernel/plugin_interface.hpp>
 #include <memory>
 #include <thread>
 #include <vector>

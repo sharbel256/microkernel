@@ -1,15 +1,10 @@
-#include "kernel/ConfigManager.hpp"
+#include "kernel/config_manager.hpp"
 
 #include <fstream>
 #include <iostream>
 #include <thread>
 
-ConfigManager::ConfigManager() {
-  fileWatcher_ = std::thread([this] {
-    checkForUpdates();
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-  });
-}
+ConfigManager::ConfigManager() {}
 
 ConfigManager::~ConfigManager() {
   watching_ = false;

@@ -1,5 +1,5 @@
 #include <iostream>
-#include <kernel/PluginInterface.hpp>
+#include <kernel/plugin_interface.hpp>
 
 class Plugin2 : public IPlugin {
  public:
