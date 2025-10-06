@@ -1,24 +1,64 @@
 #pragma once
 
-// lock-free SPSC ring buffer
-template <size_t SIZE>
-class RingBuffer {
-  std::array<Message, SIZE> buffer;
-  std::atomic<size_t> head{0}, tail{0};
+#include <kernel/model.hpp>
 
+template <size_t Size>
+class RingBuffer {
  public:
-  bool push(Message&& msg) {
-    auto h = head.load(std::memory_order_relaxed);
-    if (h - tail.load(std::memory_order_acquire) >= SIZE) return false;  // Full
-    buffer[h % SIZE] = std::move(msg);
-    head.store(h + 1, std::memory_order_release);
+
+  RingBuffer(size_t size, std::pmr::memory_resource* resource)
+      : buffer(resource), head(0), tail(0) {
+    buffer.resize(size);
+  }
+
+  explicit RingBuffer(std::pmr::memory_resource* resource = std::pmr::get_default_resource())
+      : RingBuffer(Size, resource) {}
+
+  RingBuffer(const RingBuffer&) = delete;
+  RingBuffer& operator=(const RingBuffer&) = delete;
+
+  RingBuffer(RingBuffer&& other) noexcept
+      : buffer(std::move(other.buffer)),
+        head(other.head.load(std::memory_order_relaxed)),
+        tail(other.tail.load(std::memory_order_relaxed)) {
+    other.head.store(0, std::memory_order_relaxed);
+    other.tail.store(0, std::memory_order_relaxed);
+  }
+
+  RingBuffer& operator=(RingBuffer&& other) noexcept {
+    if (this != &other) {
+      buffer = std::move(other.buffer);
+      head.store(other.head.load(std::memory_order_relaxed), std::memory_order_relaxed);
+      tail.store(other.tail.load(std::memory_order_relaxed), std::memory_order_relaxed);
+      other.head.store(0, std::memory_order_relaxed);
+      other.tail.store(0, std::memory_order_relaxed);
+    }
+    return *this;
+  }
+
+  bool push(trading::Message&& msg) {
+    size_t current_tail = tail.load(std::memory_order_relaxed);
+    size_t next_tail = (current_tail + 1) % buffer.size();
+    if (next_tail == head.load(std::memory_order_acquire)) {
+      return false;
+    }
+    buffer[current_tail] = std::move(msg);
+    tail.store(next_tail, std::memory_order_release);
     return true;
   }
-  bool pop(Message& msg) {
-    auto t = tail.load(std::memory_order_relaxed);
-    if (t == head.load(std::memory_order_acquire)) return false;  // Empty
-    msg = buffer[t % SIZE];
-    tail.store(t + 1, std::memory_order_release);
+
+  bool pop(trading::Message& msg) {
+    size_t current_head = head.load(std::memory_order_relaxed);
+    if (current_head == tail.load(std::memory_order_acquire)) {
+      return false;
+    }
+    msg = std::move(buffer[current_head]);
+    head.store((current_head + 1) % buffer.size(), std::memory_order_release);
     return true;
   }
+
+ private:
+  std::pmr::vector<trading::Message> buffer;
+  std::atomic<size_t> head;
+  std::atomic<size_t> tail;
 };

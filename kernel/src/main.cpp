@@ -3,6 +3,7 @@
 #include <functional>
 #include <iostream>
 #include <kernel/config_manager.hpp>
+#include <kernel/kernel.hpp>
 #include <kernel/plugin_interface.hpp>
 #include <memory>
 #include <thread>
@@ -75,6 +76,8 @@ class PluginManager {
 };
 
 int main() {
+  trading::Kernel kernel;
+  kernel.init();
   PluginManager manager;
   ConfigManager config;
   std::string config_path = "";
