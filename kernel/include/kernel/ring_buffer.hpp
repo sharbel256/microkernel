@@ -1,15 +1,15 @@
 #pragma once
 
 #include <kernel/model.hpp>
+#include <iostream>
 
 template <size_t Size>
 class RingBuffer {
- public:
-
-  RingBuffer(size_t size, std::pmr::memory_resource* resource)
-      : buffer(resource), head(0), tail(0) {
-    buffer.resize(size);
-  }
+   public:
+    RingBuffer(size_t size, std::pmr::memory_resource* resource)
+        : buffer(resource), head(0), tail(0) {
+        buffer.resize(size);
+    }
 
   explicit RingBuffer(std::pmr::memory_resource* resource = std::pmr::get_default_resource())
       : RingBuffer(Size, resource) {}

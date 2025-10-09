@@ -3,16 +3,17 @@
 #include <dlfcn.h>
 #include <sys/event.h>
 #include <sys/types.h>
+
 #include <atomic>
 #include <filesystem>
 #include <functional>
+#include <kernel/model.hpp>
+#include <kernel/ring_buffer.hpp>
 #include <memory_resource>
 #include <span>
 #include <thread>
 #include <unordered_map>
 #include <vector>
-#include <kernel/model.hpp>
-#include <kernel/ring_buffer.hpp>
 
 namespace trading {
 
@@ -47,7 +48,7 @@ class Kernel {
           }
         }
       }
-      std::this_thread::yield(); // Avoid busy-wait
+      std::this_thread::yield();
     }
   }
 
@@ -63,14 +64,13 @@ class Kernel {
       throw std::runtime_error("Failed to find register_plugin in: " + path.string());
     }
     reg(*this);
-    // Note: handle is not closed to keep plugin loaded
   }
 
   void register_plugin(std::unique_ptr<trading::Plugin> plugin,
                        std::vector<uint32_t> message_types) {
     auto id = next_plugin_id++;
     plugins[id] = std::move(plugin);
-    in_buffers.emplace_back(1'000'000, &arena); // Pass size and allocator
+    in_buffers.emplace_back(1'000'000, &arena);
     for (auto type : message_types) {
       subscribers[type].push_back(
           [id, this](const trading::Message& msg) { plugins[id]->handle_message(msg); });
@@ -87,13 +87,14 @@ class Kernel {
   }
 
  private:
-  std::pmr::monotonic_buffer_resource arena{1024 * 1024 * 1024}; // 1GB
+  std::pmr::monotonic_buffer_resource arena{1024 * 1024 * 1024};  // 1GB
   std::vector<std::jthread> thread_pool;
   std::pmr::unordered_map<uint64_t, std::unique_ptr<trading::Plugin>> plugins;
-  std::pmr::unordered_map<uint32_t, std::pmr::vector<std::function<void(const trading::Message&)>>> subscribers;
+  std::pmr::unordered_map<uint32_t, std::pmr::vector<std::function<void(const trading::Message&)>>>
+      subscribers;
   std::pmr::vector<RingBuffer<1'000'000>> in_buffers;
   std::atomic<bool> running{true};
   uint64_t next_plugin_id{1};
 };
 
-} // namespace trading
+}  // namespace trading
