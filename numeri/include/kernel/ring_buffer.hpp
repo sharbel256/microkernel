@@ -1,7 +1,7 @@
 #pragma once
 
-#include <kernel/model.hpp>
 #include <iostream>
+#include <kernel/model.hpp>
 
 template <size_t Size>
 class RingBuffer {

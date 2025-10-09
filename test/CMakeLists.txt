@@ -11,5 +11,4 @@ add_executable(ringbuffer_test test_ringbuffer.cpp)
 target_link_libraries(ringbuffer_test PRIVATE 
     GTest::gtest 
     GTest::gtest_main 
-    kernel
 )
